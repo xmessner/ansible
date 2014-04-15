@@ -1,0 +1,97 @@
+---
+- name: <<<< Installing Pharo 3.0 on localhost >>>>
+  hosts: local
+  vars:
+    baseUrl: http://files.pharo.org
+    imageUrl: image/30
+    vmUrl: vm/pharo/linux
+    sourcesUri: sources
+    destDir: pharo30
+    vmDir: pharo-vm
+    pharoVm: pharo
+    pharoShell: [ 'pharo','pharo-ui' ]
+    pharoParam: [ '--nodisplay','' ]
+
+  tasks:
+   - name: Get local date
+     command: date +"%Y%m%d-%H%M%S"
+     register: date
+
+   - name: Rename old install if exist
+     command: mv {{ destDir }} {{ destDir}}.{{ date.stdout }}.tar.gz
+     ignore_errors: True
+
+   - name: Rename old Pharo30 archive if exist
+     command: mv pharo30.tar.gz pharo30.{{ date.stdout }}.tar.gz
+     ignore_errors: True
+
+   - name: Create temp directory
+     command: mktemp -d image.XXXXXX
+     register: tmpDir 
+
+   - name: Downloading latest Pharo 3
+     get_url: url={{ baseUrl }}/{{ imageUrl }}/latest.zip dest={{ tmpDir.stdout }}/image.zip
+
+   - name: Extract Pharo3 archive
+     command: unzip -q {{ tmpDir.stdout }}/image.zip -d {{ tmpDir.stdout }}
+
+   - name: Remove archive
+     file: path={{ tmpDir.stdout }}/image.zip state=absent 
+
+   - name: Find image file
+     command: find {{ tmpDir.stdout }} -name \*.image
+     register: imgFile
+
+   - name: Rename image file
+     command: mv {{ imgFile.stdout }} Pharo.image
+
+   - name: Find changes file
+     command: find {{ tmpDir.stdout }} -name \*.changes
+     register: changesFile
+
+   - name: Rename changes file
+     command: mv {{ changesFile.stdout }} Pharo.changes
+
+   - name: Remove temp dir
+     file: path={{ tmpDir.stdout }} state=absent
+
+   - name: Create directory
+     file: path={{ destDir }}/{{ vmDir }} state=directory
+
+   - name: Downloading VM for Linux
+     get_url: url={{ baseUrl }}/{{ vmUrl }}/latest.zip dest={{ destDir }}/{{ vmDir }}/vm.zip
+
+   - name: Extract vm
+     command: unzip -q {{ destDir }}/{{ vmDir }}/vm.zip -d {{ destDir }}/{{ vmDir }}
+
+   - name: Delete vm archive
+     file: path={{ destDir }}/{{ vmDir }}/vm.zip state=absent
+
+# working with items ?
+
+   - name: Download PharoV10
+     get_url: url={{ baseUrl }}/{{ sourcesUri }}/PharoV10.sources.zip dest={{ destDir }}/{{ vmDir }}/source.zip
+
+   - name: Unzip sources
+     command: unzip -q {{ destDir }}/{{ vmDir }}/source.zip -d {{ destDir }}/{{ vmDir }}
+
+   - name: Delete old source archive
+     file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
+
+   - name: Download PharoV20
+     get_url: url={{ baseUrl }}/{{ sourcesUri }}/PharoV20.sources.zip dest={{ destDir }}/{{ vmDir }}/source.zip
+
+   - name: Unzip sources
+     command: unzip -q {{ destDir }}/{{ vmDir }}/source.zip -d {{ destDir }}/{{ vmDir }}
+
+   - name: Delete old source archive
+     file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
+
+   - name: Create launch scripts
+     template: src=pharo.j2 dest={{ destDir }}/{{ item.0 }} mode=755
+     with_together:
+       - pharoShell
+       - pharoParam
+
+   - name: Create package to deploy
+     command: tar cfz pharo30.tar.gz {{ destDir }}
