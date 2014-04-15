@@ -1,20 +1,2 @@
-[RH4]
-10.21.4.69
-10.21.3.159 ansible_ssh_port=1201
-
-[RH5]
-10.21.3.130
-10.21.3.250
-
-[RH6]
-10.21.104.148
-
-[OBSD]
-10.21.3.139 ansible_ssh_port=1402
-10.21.3.159 ansible_ssh_port=1202
-
-[ansible]
-10.21.104.233
-
 [local]
 127.0.0.1 ansible_connection=local
