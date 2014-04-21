@@ -7,6 +7,8 @@
     vmUrl: vm/pharo/linux
     sourcesUri: sources
     destDir: pharo30
+    archiveName: pharo30.tar.gz
+    destRemoteDir: /home/messner
     vmDir: pharo-vm
     pharoVm: pharo
     pharoShell: [ 'pharo','pharo-ui' ]
@@ -16,82 +18,142 @@
    - name: Get local date
      command: date +"%Y%m%d-%H%M%S"
      register: date
+     tags:
+       - download
 
    - name: Rename old install if exist
      command: mv {{ destDir }} {{ destDir}}.{{ date.stdout }}.tar.gz
      ignore_errors: True
+     tags:
+       - download
 
    - name: Rename old Pharo30 archive if exist
      command: mv pharo30.tar.gz pharo30.{{ date.stdout }}.tar.gz
      ignore_errors: True
+     tags:
+       - download
 
    - name: Create temp directory
      command: mktemp -d image.XXXXXX
      register: tmpDir 
+     tags:
+       - download
 
    - name: Downloading latest Pharo 3
      get_url: url={{ baseUrl }}/{{ imageUrl }}/latest.zip dest={{ tmpDir.stdout }}/image.zip
+     tags:
+       - download
 
    - name: Extract Pharo3 archive
      command: unzip -q {{ tmpDir.stdout }}/image.zip -d {{ tmpDir.stdout }}
+     tags:
+       - download
 
    - name: Remove archive
      file: path={{ tmpDir.stdout }}/image.zip state=absent 
+     tags:
+       - download
 
    - name: Find image file
      command: find {{ tmpDir.stdout }} -name \*.image
      register: imgFile
+     tags:
+       - download
 
    - name: Rename image file
      command: mv {{ imgFile.stdout }} Pharo.image
+     tags:
+       - download
 
    - name: Find changes file
      command: find {{ tmpDir.stdout }} -name \*.changes
      register: changesFile
+     tags:
+       - download
 
    - name: Rename changes file
      command: mv {{ changesFile.stdout }} Pharo.changes
+     tags:
+       - download
 
    - name: Remove temp dir
      file: path={{ tmpDir.stdout }} state=absent
+     tags:
+       - download
 
    - name: Create directory
      file: path={{ destDir }}/{{ vmDir }} state=directory
+     tags:
+       - download
 
    - name: Downloading VM for Linux
      get_url: url={{ baseUrl }}/{{ vmUrl }}/latest.zip dest={{ destDir }}/{{ vmDir }}/vm.zip
+     tags:
+       - download
 
    - name: Extract vm
      command: unzip -q {{ destDir }}/{{ vmDir }}/vm.zip -d {{ destDir }}/{{ vmDir }}
+     tags:
+       - download
 
    - name: Delete vm archive
      file: path={{ destDir }}/{{ vmDir }}/vm.zip state=absent
+     tags:
+       - download
 
 # working with items ?
 
    - name: Download PharoV10
      get_url: url={{ baseUrl }}/{{ sourcesUri }}/PharoV10.sources.zip dest={{ destDir }}/{{ vmDir }}/source.zip
+     tags:
+       - download
 
    - name: Unzip sources
      command: unzip -q {{ destDir }}/{{ vmDir }}/source.zip -d {{ destDir }}/{{ vmDir }}
+     tags:
+       - download
 
    - name: Delete old source archive
      file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
+     tags:
+       - download
 
    - name: Download PharoV20
      get_url: url={{ baseUrl }}/{{ sourcesUri }}/PharoV20.sources.zip dest={{ destDir }}/{{ vmDir }}/source.zip
+     tags:
+       - download
 
    - name: Unzip sources
      command: unzip -q {{ destDir }}/{{ vmDir }}/source.zip -d {{ destDir }}/{{ vmDir }}
+     tags:
+       - download
 
    - name: Delete old source archive
      file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
+     tags:
+       - download
 
    - name: Create launch scripts
      template: src=pharo.j2 dest={{ destDir }}/{{ item.0 }} mode=755
      with_together:
        - pharoShell
        - pharoParam
+     tags:
+       - download
 
    - name: Create package to deploy
-     command: tar cfz pharo30.tar.gz {{ destDir }}
+     command: tar cfz {{ archiveName }} {{ destDir }}
+     tags:
+       - download
+
+   - name: Deploy on servers
+     copy: src={{ archiveName }} dest={{ destRemoteDir }}
+     tags:
+       - deploy
+
+   - name: Extract archive
+     command: tar xfz {{ destRemoteDir }}/{{ archiveName }} --directory {{ destRemoteDir }}
+     ignore_errors: True
+     tags:
+       - deploy
+     
