@@ -40,8 +40,9 @@ Then to use the right user in playbook you have to add this
   user: optimus
   sudo: yes
 ```
+YAML take care of indentation, so don't forget to double space at the begining.
 
-When playbook is lauch it will use the ssh key and then log into the remote server with **optimus** as user. All actions will be launched with sudo (root). So be really carfull when you write playooks.
+When playbook is lauch it will use the ssh key and then log into the remote server with **optimus** as user. All actions will be launched with sudo (root). So be really carefull when you write playooks.
 
 # Future playbooks (wishes)
 
