@@ -5,7 +5,7 @@ Ansible playbook to download and deploy Pharo 3
 
 This playbook is the first version to help you download and deploy **Pharo 3** on all your serveurs or in cloud.
 
-All you need is **Ansible version 1.6** (1.5 should work but not tested) on your main server and a recent Linux distrib on your remote servers.
+All you need is **Ansible version 1.5.x** on your main server and a recent Linux distrib on your remote servers.
 
 To download the latest version you need to use this
 
