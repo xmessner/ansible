@@ -94,6 +94,15 @@
    - name: Delete old source archive
      file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
 
+   - name: Download PharoV30
+     get_url: url={{ baseUrl }}/{{ sourcesUri }}/PharoV30.sources.zip dest={{ destDir }}/{{ vmDir }}/source.zip
+
+   - name: Unzip sources
+     command: unzip -q {{ destDir }}/{{ vmDir }}/source.zip -d {{ destDir }}/{{ vmDir }}
+
+   - name: Delete old source archive
+     file: path={{ destDir }}/{{ vmDir }}/source.zip state=absent
+
    - name: Create launch scripts
      template: src=pharo.j2 dest={{ destDir }}/{{ item.0 }} mode=755
      with_together:
